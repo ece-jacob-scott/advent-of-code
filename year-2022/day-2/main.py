@@ -1,7 +1,7 @@
 #! /home/jscott/.pyenv/shims/python
 
 from sys import argv
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 key = {
     "A": "rock",
@@ -12,18 +12,16 @@ key = {
     "Z": "scissors"
 }
 
-# key beats value
-results_map = {
-    "paper": "rock",
-    "rock": "scissors",
-    "scissors": "paper"
+win_map = {
+    "rock": "paper",
+    "paper": "scissors",
+    "scissors": "rock"
 }
 
-# key loses to value
 lose_map = {
-    "rock": "paper",
-    "scissors": "rock",
-    "paper": "scissors"
+    "rock": "scissors",
+    "paper": "rock",
+    "scissors": "paper"
 }
 
 throw_value = {
@@ -34,15 +32,12 @@ throw_value = {
 
 
 def score(round: Tuple[str, str]) -> int:
-    added_value = throw_value[round[1]]
-    win = results_map[round[1]] == round[0]
-
-    if win:
-        return 6 + added_value
+    if lose_map[round[1]] == round[0]:
+        return 6 + throw_value[round[1]]
     elif round[0] == round[1]:
-        return 3 + added_value
+        return 3 + throw_value[round[1]]
     else:
-        return 0 + added_value
+        return 0 + throw_value[round[1]]
 
 
 def prompt_one(input_lines: List[str]):
@@ -53,13 +48,13 @@ def prompt_one(input_lines: List[str]):
     return sum(map(lambda r: score(r), rounds))
 
 
-def determine_throw(opponent_throw: str, outcome: str) -> str:
-    if outcome == "Y":
-        return opponent_throw
-    if outcome == "X":
-        return results_map[opponent_throw]
-    if outcome == "Z":
-        return lose_map[opponent_throw]
+def score_two(round: Tuple[str, str]) -> int:
+    if round[1] == "Y":
+        return 3 + throw_value[round[0]]
+    elif round[1] == "X":
+        return 0 + throw_value[lose_map[round[0]]]
+    else:
+        return 6 + throw_value[win_map[round[0]]]
 
 
 def prompt_two(input_lines: List[str]):
@@ -67,12 +62,7 @@ def prompt_two(input_lines: List[str]):
         lambda line:
         (key[line.split(" ")[0]], line.split(" ")[1]), input_lines))
 
-    round_scores = []
-    for round in rounds:
-        r = (round[0], determine_throw(round[0], round[1]))
-        round_scores.append(score(r))
-
-    return sum(round_scores)
+    return sum(map(lambda r: score_two(r), rounds))
 
 
 if __name__ == "__main__":
