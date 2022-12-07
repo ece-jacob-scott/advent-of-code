@@ -47,7 +47,6 @@ def __calculate_directory_sizes(node):
 def calculate_directory_sizes(file_system):
     __calculate_directory_sizes(file_system)
 
-    # TODO: figure out why the rec function doesn't set the root
     for child in file_system["children"]:
         if isinstance(child, int):
             size = child
