@@ -16,30 +16,6 @@ def parse_line(line):
     return (parts[0], parts[1])
 
 
-file_system_test = {
-    "name": "/",
-    "children": [
-        {
-            "name": "a",
-            "children": [
-                12,
-                23,
-                {
-                    "name": "e",
-                    "children": [23, 43]
-                }
-            ]
-        },
-        {
-            "name": "f",
-            "children": []
-        },
-        12,
-        12
-    ],
-}
-
-
 def create_node(name: str, parent):
     return {
         "name": name,
@@ -47,26 +23,6 @@ def create_node(name: str, parent):
         "parent": parent,
         "size": 0
     }
-
-
-def __traverse_file_system_rec(node, folder_name):
-    if node["name"] == folder_name:
-        return node
-
-    for child in node["children"]:
-        if isinstance(child, int):
-            continue
-
-        n = __traverse_file_system_rec(child, folder_name)
-
-        if n:
-            return n
-
-    return None
-
-
-def traverse_file_system(file_system, folder_name):
-    return __traverse_file_system_rec(file_system, folder_name)
 
 
 def __calculate_directory_sizes(node):
