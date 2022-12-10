@@ -1,5 +1,6 @@
 #! /home/jscott/.pyenv/shims/python
 from sys import argv
+
 from os import getcwd, makedirs, path, system
 
 valid_year = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"]
@@ -119,3 +120,5 @@ if __name__ == "__main__":
             f'wget --load-cookies={current_directory}/../adventofcode.com_cookies.txt https://adventofcode.com/{year}/day/{day}/input -O {new_day_directory}/input-1.txt')
     else:
         print("already downloaded input-1.txt")
+
+    system(f'touch {new_day_directory}/test-1.txt')
