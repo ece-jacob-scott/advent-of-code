@@ -1,151 +1,122 @@
 #! /home/jscott/.pyenv/shims/python
 
 from sys import argv
-from typing import List, Tuple
+from typing import List
 from pprint import pp
-import heapq as heap
 from collections import defaultdict
 
 
 # (y, x)
-def find_S(grid: List[List[str]]) -> Tuple[int, int]:
+def find_S(grid):
+
     for i in range(len(grid)):
         for k in range(len(grid[i])):
             if grid[i][k] == "S":
                 return (i, k)
 
 
-def create_node(value, coors):
-    return {
-        "value": value,
-        "coors": coors,
-        "children": [],
-    }
+def find_E(grid):
+    for i in range(len(grid)):
+        for k in range(len(grid[i])):
+            if grid[i][k] == "E":
+                return (i, k)
 
 
 def get_value(grid, coor):
-    character = grid[coor[0]][coor[1]]
+    (y, x) = coor
+
+    max_y = len(grid)
+    max_x = len(grid[0])
+
+    if y < 0 or y == max_y or x < 0 or x == max_x:
+        return None
+
+    character = grid[y][x]
+
+    if character == "E":
+        return ord("z")
     if character == "S":
         return ord("a")
-    elif character == "E":
-        return ord("z")
     return ord(character)
 
 
-def get_valid_next_moves(
-        grid: List[List[str]],
-        coor: Tuple[int, int]) -> Tuple[Tuple[int, int]]:
-    (y, x) = coor
-    value = get_value(grid, coor)
-    up = None
-    down = None
-    left = None
-    right = None
-    # up
-    if not y == 0:
-        up = (y - 1, x)
-        if 1 < get_value(grid, up) - value:
-            up = None
-    # down
-    if not y == len(grid) - 1:
-        down = (y + 1, x)
-        if 1 < get_value(grid, down) - value:
-            down = None
-    # left
-    if not x == 0:
-        left = (y, x - 1)
-        if 1 < get_value(grid, left) - value:
-            left = None
-    # right
-    if not x == len(grid[0]) - 1:
-        right = (y, x + 1)
-        if 1 < get_value(grid, right) - value:
-            right = None
-
-    return (up, down, left, right)
+def get_valid_next_move(grid, curr_coor):
+    moves = []
+    (y, x) = curr_coor
+    curr_value = get_value(grid, curr_coor)
+    up = (y - 1, x)
+    up = (get_value(grid, up), up)
+    down = (y + 1, x)
+    down = (get_value(grid, down), down)
+    left = (y, x - 1)
+    left = (get_value(grid, left), left)
+    right = (y, x + 1)
+    right = (get_value(grid, right), right)
+    for move in [up, down, left, right]:
+        if move[0] and (move[0] - curr_value) <= 1:
+            moves.append(move[1])
+    return tuple(filter(lambda x: not x == None, moves))
 
 
-# REWRITE
-def create_graph_rec(grid, curr_node, seen, coor):
-    value = get_value(grid, coor)
-    if value == "E":
-        return create_node("E", coor)
-
-    next_moves = get_valid_next_moves(grid, coor)
-    next_moves = list(
-        filter(lambda x: x != None and not x in seen, next_moves))
-
-    if len(next_moves) == 0:
-        return create_node("?", ())
-
-    for move in next_moves:
-        node = create_node(grid[move[0]][move[1]], move)
-
-        curr_node["children"].append(node)
-
-        seen.add(move)
-
-        create_graph_rec(grid, node, seen, move)
-
-
-def create_graph(grid: List[List[str]]):
-    start = find_S(grid)
-    start_node = create_node("S", start)
-    seen = set()
-    seen.add(start)
-
-    create_graph_rec(grid, start_node, seen, start)
-
-    return start_node
-
-
-def traverse_graph(curr_node):
+def bfs_path_finding(grid, start_coor):
     queue = []
+    queue.append(start_coor)
     seen = set()
-    dist = defaultdict(lambda: float("inf"))
-    pred = defaultdict(lambda: -1)
-
-    seen.add(curr_node["coors"])
-    dist[curr_node["coors"]] = 0
-    queue.append(curr_node)
+    distance = defaultdict(lambda: float("inf"))
+    distance[start_coor] = 0
 
     while len(queue) > 0:
-        node = queue.pop(0)
-        for child in node["children"]:
-            if child["coors"] in seen:
-                continue
-            seen.add(child["coors"])
-            dist[child["coors"]] = dist[node["coors"]] + 1
-            pred[child["coors"]] = node
-            queue.append(child)
+        curr_coor = queue.pop(0)
+        seen.add(curr_coor)
 
-            if (child["value"] == "E"):
-                return True
-    return False
+        children = get_valid_next_move(grid, curr_coor)
+        for child in children:
+            if child in seen:
+                continue
+            old_cost = distance[child]
+            new_cost = distance[curr_coor] + 1
+            if new_cost < old_cost:
+                queue.append(child)
+                distance[child] = new_cost
+
+    return distance
 
 
 def prompt_one(input_lines: List[str]):
-    print(input_lines)
     grid = []
-    for line in input_lines:
-        grid.append(list(line))
+    for i in range(len(input_lines)):
+        row = []
+        for k in range(len(input_lines[i])):
+            row.append(input_lines[i][k])
+        grid.append(row)
+    return bfs_path_finding(grid, find_S(grid))[find_E(grid)]
 
-    g = create_graph(grid)
 
-    queue = []
-    queue.append(g)
-
-    while len(queue) > 0:
-        node = queue.pop(0)
-        print(f'node: {node["value"]} {node["coors"]}')
-
-        for child in node["children"]:
-            print(f'children: {child["value"]} {child["coors"]}')
-            queue.append(child)
+def find_all_starting_coors(grid):
+    starting_coors = []
+    for i in range(len(grid)):
+        for k in range(len(grid[i])):
+            if grid[i][k] == "a" or grid[i][k] == "S":
+                starting_coors.append((i, k))
+    return starting_coors
 
 
 def prompt_two(input_lines: List[str]):
-    pass
+    grid = []
+    for i in range(len(input_lines)):
+        row = []
+        for k in range(len(input_lines[i])):
+            row.append(input_lines[i][k])
+        grid.append(row)
+    starts = find_all_starting_coors(grid)
+    ending_coors = find_E(grid)
+    curr_distance = float("inf")
+    for start in starts:
+        # run path finding on all starts
+        distance = bfs_path_finding(grid, start)[ending_coors]
+        if distance < curr_distance:
+            curr_distance = distance
+    return curr_distance
 
 
 if __name__ == "__main__":
