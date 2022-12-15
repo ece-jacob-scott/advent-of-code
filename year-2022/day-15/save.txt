@@ -2,3 +2,9 @@ Saving my attempt here. I think I have a good solution but the input is too big
 to work with an array. I think this is "easily" calculatable though now that I 
 think about it. I should be able to reconfigure my adding area map logic to just 
 count the number of spaces it would cover on the target line.
+
+Or instead of creating a map in general you create a defaultdict and still run
+my current adding area function but you only run it and keep track of the entries
+that have y = target. This still might be a very costly array though. There is 
+probably some O(1) way of doing this but I'm not sure. I think this will work
+though. 
