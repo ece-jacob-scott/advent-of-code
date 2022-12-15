@@ -7,6 +7,7 @@ Repo that tracks my progress completing the coding challenges from [Advent of Co
 ```
       --------Part 1--------   --------Part 2--------
 Day       Time   Rank  Score       Time   Rank  Score
+ 15   13:11:39  21620      0   15:06:10  16804      0
  14   01:58:42   7458      0   02:38:12   7747      0
  13   13:17:23  23644      0   13:34:48  22622      0
  12   12:25:25  24157      0   12:31:18  23127      0
