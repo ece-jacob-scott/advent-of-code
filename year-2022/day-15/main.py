@@ -3,6 +3,7 @@
 from sys import argv
 from typing import List, Tuple
 from pprint import pp
+from collections import defaultdict
 
 
 # (x, y)
@@ -23,65 +24,6 @@ def get_coors(input_lines):
     return coors
 
 
-def print_map(coor_map, offsets):
-    (x_offset, y_offset) = offsets
-    digits = len(str(len(coor_map[0])))
-
-    for l in reversed(range(digits)):
-        print("     ", end="")
-        for k in range(len(coor_map[0])):
-            n = k - x_offset
-            if n == 0 or n % 5 == 0:
-                try:
-                    print(list(reversed(str(abs(n))))[l], end="")
-                except:
-                    print(" ", end="")
-            else:
-                print(" ", end="")
-        print("")
-
-    i = 0
-    for line in coor_map:
-        print(f'{i - y_offset:04d} {"".join(line)}')
-        i += 1
-
-
-def build_map(coors: List[Tuple[Tuple[str, str]]], padding: int = 10) -> List[List[str]]:
-    x_max = float("-inf")
-    x_min = float("inf")
-    y_max = float("-inf")
-    y_min = float("inf")
-
-    coor_map = []
-
-    for coor in coors:
-        (sensor, beacon) = coor
-        (sensor_x, sensor_y) = sensor
-        (beacon_x, beacon_y) = beacon
-
-        if sensor_x > x_max or beacon_x > x_max:
-            x_max = sensor_x if sensor_x > beacon_x else beacon_x
-        if sensor_y > y_max or beacon_y > y_max:
-            y_max = sensor_y if sensor_y > beacon_y else beacon_y
-
-        if sensor_x < x_min or beacon_x < x_min:
-            x_min = sensor_x if sensor_x < beacon_x else beacon_x
-        if sensor_y < y_min or beacon_y < y_min:
-            y_min = sensor_y if sensor_y < beacon_y else beacon_y
-
-    # amount away from 0
-    y_offset = abs(y_min) + padding
-    x_offset = abs(x_min) + padding
-
-    for i in range(abs(y_max - y_min) + (2 * padding)):
-        coor_map.append(
-            ["." for k in range(abs(x_max - x_min) + (2 * padding))])
-
-    print((x_max, y_max), (x_min, y_min))
-
-    return coor_map, (x_offset, y_offset)
-
-
 def calculate_distance(coor):
     (sensor, beacon) = coor
     (sensor_x, sensor_y) = sensor
@@ -90,94 +32,126 @@ def calculate_distance(coor):
     return abs(sensor_x - beacon_x) + abs(sensor_y - beacon_y)
 
 
-def create_area_map(coor_map, coor, offsets, target_pre_offset):
+def create_area_map(coor, existing_symbols, target_line, target):
     (sensor, beacon) = coor
     (sensor_x, sensor_y) = sensor
     (beacon_x, beacon_y) = beacon
-    (x_offset, y_offset) = offsets
     distance = calculate_distance(coor)
-    target = target_pre_offset + y_offset
 
     # calculate_distance to the target line
-    k = abs(distance - abs((sensor_y + y_offset) - target))
-    # print(k)
-    # print(distance)
-    # print(distance - k)
+    k = abs(distance - abs(sensor_y - target))
 
     for i in range(k + 1):
-        new_x_down = (sensor_x + x_offset) - i
-        new_y_down = (sensor_y + y_offset) + (distance - k)
-        new_x_up = (sensor_x + x_offset) - i
-        new_y_up = (sensor_y + y_offset) - (distance - k)
-        new_x_down_rev = (sensor_x + x_offset) + i
-        new_y_down_rev = (sensor_y + y_offset) + (distance - k)
-        new_x_up_rev = (sensor_x + x_offset) + i
-        new_y_up_rev = (sensor_y + y_offset) - (distance - k)
+        new_x_down = sensor_x - i
+        new_y_down = sensor_y + (distance - k)
+        new_x_up = sensor_x - i
+        new_y_up = sensor_y - (distance - k)
+        new_x_down_rev = (sensor_x) + i
+        new_y_down_rev = sensor_y + (distance - k)
+        new_x_up_rev = sensor_x + i
+        new_y_up_rev = sensor_y - (distance - k)
 
-        existing_symbol_down = coor_map[new_y_down][new_x_down]
-        existing_symbol_up = coor_map[new_y_up][new_x_up]
-        existing_symbol_down_rev = coor_map[new_y_down_rev][new_x_down_rev]
-        existing_symbol_up_rev = coor_map[new_y_up_rev][new_x_up_rev]
+        up_left = (new_x_up, new_y_up)
+        down_left = (new_x_down, new_y_down)
+        up_right = (new_x_up_rev, new_y_up_rev)
+        down_right = (new_x_down_rev, new_y_down_rev)
 
-        if existing_symbol_down == ".":
-            coor_map[new_y_down][new_x_down] = "#"
+        if new_y_up == target and (not up_left in existing_symbols):
+            target_line.add(up_left)
 
-        if existing_symbol_up == ".":
-            coor_map[new_y_up][new_x_up] = "#"
+        if new_y_down == target and (not down_left in existing_symbols):
+            target_line.add(down_left)
 
-        if existing_symbol_down_rev == ".":
-            coor_map[new_y_down_rev][new_x_down_rev] = "#"
+        if new_y_up_rev == target and (not up_right in existing_symbols):
+            target_line.add(up_right)
 
-        if existing_symbol_up_rev == ".":
-            coor_map[new_y_up_rev][new_x_up_rev] = "#"
+        if new_y_down_rev == target and (not down_right in existing_symbols):
+            target_line.add(down_right)
 
-
-def place_sensors_and_beacons(coor_map, coors, offsets):
-    (x_offset, y_offset) = offsets
-
-    for coor in coors:
-        (sensor, beacon) = coor
-        (sensor_x, sensor_y) = sensor
-        (beacon_x, beacon_y) = beacon
-
-        coor_map[sensor_y + y_offset][sensor_x + x_offset] = "S"
-        coor_map[beacon_y + y_offset][beacon_x + x_offset] = "B"
+    return target_line
 
 
 def prompt_one(input_lines: List[str]):
     # target = 10
     target = 2_000_000
     coors = get_coors(input_lines)
-    print("building map...")
-    (coor_map, offsets) = build_map(coors, 10000)
-    print("built map...")
-    print("placing beacons...")
-    place_sensors_and_beacons(coor_map, coors, offsets)
-    print("placed beacons")
+    sensors_and_beacons = set()
 
-    print("adding area maps...")
     for coor in coors:
-        create_area_map(coor_map, coor, offsets, target)
-    print("added area maps")
+        (sensor, beacon) = coor
+        sensors_and_beacons.add(sensor)
+        sensors_and_beacons.add(beacon)
 
-    # create_area_map(coor_map, coors[6], offsets, target)
+    target_line = set()
+    for coor in coors:
+        create_area_map(coor, sensors_and_beacons, target_line, target)
 
-    # count  # in line
-    print("counting covered locations...")
-    line_to_check = 10 + offsets[1]
-    answer = 0
-    for i in coor_map[line_to_check]:
-        if i == "#":
-            answer += 1
-    print("done counting")
+    return len(target_line)
 
-    # print_map(coor_map, offsets)
 
-    return answer
+def get_perimeter_coors(start: Tuple[int, int], distance: int, clamp: int, test_coors: set):
+    (x, y) = start
+
+    for i in range(distance):
+        # for each iteration get the point right out side of the range
+        left_down = (((x - distance) + i) - 1, (y + i))
+        right_down = (((x + distance) - i) + 1, (y + i))
+        left_up = (((x - distance) + i) - 1, (y - i))
+        right_up = (((x + distance) - i) + 1, (y - i))
+
+        x_min = left_down[0]
+        x_max = right_down[0]
+        y_min = left_up[1]
+        y_max = left_down[1]
+
+        if x_min < 0 or y_min < 0:
+            continue
+        if x_max > clamp or y_max > clamp:
+            continue
+
+        test_coors.add(left_down)
+        test_coors.add(left_up)
+        test_coors.add(right_down)
+        test_coors.add(right_up)
 
 
 def prompt_two(input_lines: List[str]):
-    pass
+    # O(1) operations: calculating distance, calculating area of sensor
+    # O(S) comparing a point to all sensors distances
+    # can't loop through array of coordinates with an area of (4_000_000 * 4_000_000)
+    coors = get_coors(input_lines)
+    # clamp = 20
+    clamp = 4_000_000
+    beacon_coor = None
+
+    detection_distances = defaultdict(lambda: 0)
+    test_coors = set()
+
+    print("getting possible locations...")
+
+    for coor in coors:
+        distance = calculate_distance(coor)
+        detection_distances[coor] = (coor[0], distance)
+        get_perimeter_coors(coor[0], distance, clamp, test_coors)
+
+    print("getting beacon coor...")
+
+    for possible_location in test_coors:
+        tracker = 0
+        for sensor in detection_distances.values():
+            (coor, distance) = sensor
+            if calculate_distance((coor, possible_location)) <= distance:
+                break
+            tracker += 1
+        if tracker == len(detection_distances.values()):
+            beacon_coor = possible_location
+            break
+
+    if beacon_coor is None:
+        print("didn't find a beacon")
+        return
+
+    return (beacon_coor[0] * 4_000_000) + beacon_coor[1]
 
 
 if __name__ == "__main__":
