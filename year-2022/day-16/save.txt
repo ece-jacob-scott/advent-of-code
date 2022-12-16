@@ -2,3 +2,6 @@ This doens't work but I think I know what to do. I need to traverse the graph
 and calculate the total pressure relieved by each path. I don't need to know the 
 path I just need to know what most pressure relieved by the path. This should
 not be too hard but my brain is mush tonight. Will go again tomorrow. 
+
+
+maybe topological sort is something useful. 
