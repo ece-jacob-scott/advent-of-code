@@ -3,9 +3,7 @@ and calculate the total pressure relieved by each path. I don't need to know the
 path I just need to know what most pressure relieved by the path. This should
 not be too hard but my brain is mush tonight. Will go again tomorrow. 
 
-
-maybe topological sort is something useful. 
-
-
 skipping this puzzle for now to save my sanity will get back to it though before
 the end of the year. I have a lot of time off coming up. 
+
+You need to figure out the DFS algorithm with the right memoization of paths.
