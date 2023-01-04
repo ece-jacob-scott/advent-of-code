@@ -2,6 +2,10 @@
 
 Repo that tracks my progress completing the coding challenges from [Advent of Code](https://adventofcode.com/)
 
+# 2022 stopping point 
+
+I could not for the life of me figure out day 16. I will try and complete the rest of the puzzles when I have time but I am taking a break for now.
+
 # 2022 Stats
 
 ```
