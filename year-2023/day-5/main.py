@@ -53,19 +53,68 @@ def source_to_destination_two(
 ) -> List[Tuple[int, int]]:
     sources = []
 
+    # keep track of remaining source to test range against
+    test_sources = [(source, source_range)]
+    next_test_sources = []
+
     for line in almanac:
         destination_, source_, range_ = list(map(int, line.split(" ")))
 
-        # figure out if source + source_range overlaps with source_ + range_
-        # high = min(source + source_range, source_ + range_)
-        # low = max(source, source_)
+        while len(test_sources) > 0:
+            source, source_range = test_sources.pop(0)
 
-        # print(high, low)
+            # figure out if source + source_range overlaps with source_ + range_
+            high = min(source + source_range, source_ + range_)
+            low = max(source, source_)
 
-        if high < low:
-            continue
+            # not in the overlapping range
+            if high <= low:
+                next_test_sources.append((source, source_range))
+                continue
 
-        sources.append((low, high - low))
+            # categorize overlap
+            new_destination = -1
+            new_range = -1
+
+            # 1
+            if high == (source + source_range) and low == source:
+                new_destination = destination_ + (source - source_)
+                new_range = source_range
+                # no leftover
+            # 2
+            elif high == (source + source_range) and low == source_:
+                new_destination = destination_
+                new_range = (source + source_range) - source_
+                # 1 leftover
+                next_test_sources.append((source, source_ - source))
+            # 3
+            elif high == (source_ + range_) and low == source:
+                new_destination = destination_ + (source - source_)
+                new_range = (source_ + range_) - source
+                # 1 leftover
+                next_test_sources.append(
+                    (source + new_range, (source + source_range) - (source_ + range_))
+                )
+            # 4
+            elif high == (source_ + range_) and low == source_:
+                new_destination = destination_
+                new_range = range_
+                # 2 leftover
+                next_test_sources.append((source, source_ - source))
+                next_test_sources.append(
+                    (
+                        source_ + new_range,
+                        (source + source_range) - (source_ + new_range),
+                    )
+                )
+
+            sources.append((new_destination, new_range))
+
+        test_sources = next_test_sources
+        next_test_sources = []
+
+    if len(test_sources) > 0:
+        sources.extend(test_sources)
 
     return sources
 
@@ -90,7 +139,7 @@ def prompt_two(input_lines: List[str]):
     almanacs = []
     for line in input_lines[2:]:
         if line == "":
-            almanacs.append(almanac_input[1:])
+            almanacs.append(almanac_input)
             almanac_input = []
             continue
 
@@ -101,20 +150,24 @@ def prompt_two(input_lines: List[str]):
     # - run source_to_destination_two on those pairs to get more pairs
     # - repeat until there are no more almanacs
     # - the lowest number in the list of ranges should be the answer
-    for seed_pair in seeds:
-        queue = [seed_pair]
-        next_queue = []
+    queue = seeds
+    next_queue = []
 
-        for almanac in almanacs:
-            for p in queue:
-                new_sources = source_to_destination_two(p[0], p[1], almanac)
-                next_queue.extend(new_sources)
+    for almanac in almanacs:
+        for seed_pair in queue:
+            seed_source, seed_range = seed_pair
+            new_source_ranges = source_to_destination_two(
+                seed_source, seed_range, almanac[1:]
+            )
+            next_queue.extend(new_source_ranges)
+
+        if len(next_queue) == 0:
+            queue = queue
+        else:
             queue = next_queue
             next_queue = []
 
-        print(queue)
-
-    # return min(answer)
+    return min(queue, key=lambda x: x[0])[0]
 
 
 if __name__ == "__main__":
