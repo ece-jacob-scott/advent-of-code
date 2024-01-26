@@ -159,50 +159,16 @@ def calculate_enclosed_ground(
     pipes: List[List[str]], visited: Set[Tuple[int, int]]
 ) -> int:
     ground_captured = 0
-    searching = False
-    capture_pipe = set(["|", "F", "J", "L", "7", "S"])
-    stop_pipe_map = {
-        "|": ["|", "L", "F"],
-        "L": ["J", "7"],
-        "F": ["J", "7"],
-        "S": ["J", "7"],
-    }
-    stop_pipe = []
-    wall_stack = 0
-
-    # for y, pipe_line in enumerate(pipes):
-    #     for x, pipe in enumerate(pipe_line):
-    #         if searching and pipe == GROUND:
-    #             ground_captured += 1
-    #             pipes[y][x] = "I"
-    #             continue
-
-    #         if pipe in capture_pipe and (y, x) in visited:
-    #             # check if it should stop searching
-    #             if searching and pipe in stop_pipe:
-    #                 searching = False
-    #                 stop_pipe = ""
-
-    #                 if wall_stack > 0:
-    #                     searching = True
-    #                     stop_pipe = stop_pipe_map[VERTICAL]
-    #                     wall_stack -= 1
-
-    #                 continue
-
-    #             # don't stop
-    #             if searching:
-    #                 continue
-
-    #             # start searching
-    #             if pipe == VERTICAL:
-    #                 wall_stack += 1
-
-    #             stop_pipe = stop_pipe_map[pipe]
-    #             searching = True
-
-    #     if searching:
-    #         raise Exception("uh oh")
+    # searching = False
+    # capture_pipe = set(["|", "F", "J", "L", "7", "S"])
+    # stop_pipe_map = {
+    #     "|": ["|", "L", "F"],
+    #     "L": ["J", "7"],
+    #     "F": ["J", "7"],
+    #     "S": ["J", "7"],
+    # }
+    # stop_pipe = []
+    # wall_stack = 0
 
     return ground_captured
 

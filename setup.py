@@ -3,7 +3,8 @@ from sys import argv
 
 from os import getcwd, makedirs, path, system
 
-valid_year = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022"]
+valid_year = ["2015", "2016", "2017", "2018",
+              "2019", "2020", "2021", "2022", "2023"]
 valid_day = [
     "1",
     "2",
